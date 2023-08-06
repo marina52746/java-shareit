@@ -2,7 +2,7 @@ package ru.practicum.shareit.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import javax.management.InstanceNotFoundException;
@@ -21,24 +21,24 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> findAll() {
+    public List<UserDto> findAll() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public User findUserById(@PathVariable("id") Long userId) throws HttpClientErrorException {
+    public UserDto findUserById(@PathVariable("id") Long userId) throws NotFoundException {
         return userService.getUserById(userId);
     }
 
     @PostMapping
-    public User createUser(@Valid @RequestBody User user) throws ServerException {
-        return userService.createUser(user);
+    public UserDto createUser(@Valid @RequestBody UserDto userDto) throws ServerException {
+        return userService.createUser(userDto);
     }
 
     @PatchMapping("/{userId}")
-    public User update(@Valid @RequestBody UserDto user,
+    public UserDto update(@RequestBody UserDto userDto,
                        @PathVariable Long userId) throws InstanceNotFoundException, ServerException {
-        return userService.updateUser(userId, user);
+        return userService.updateUser(userId, userDto);
     }
 
     @DeleteMapping("/{userId}")

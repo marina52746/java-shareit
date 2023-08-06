@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.ItemService;
 
 import javax.validation.Valid;
 import java.rmi.ServerException;
@@ -22,30 +20,30 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public Item getItemById(@PathVariable Long itemId) {
+    public ItemDto getItemById(@PathVariable Long itemId) {
         return itemService.getItemById(itemId);
     }
 
     @GetMapping
-    public List<Item> getUserItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemDto> getUserItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
         return itemService.getUserItems(userId);
     }
 
     @PostMapping
-    public Item add(@RequestHeader("X-Sharer-User-Id") Long userId,
-                    @Valid @RequestBody Item item) throws NotFoundException {
-        return itemService.createItem(userId, item);
+    public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
+                       @Valid @RequestBody ItemDto itemDto) throws NotFoundException {
+        return itemService.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
-    public Item update(@PathVariable Long itemId, @RequestHeader("X-Sharer-User-Id") Long userId,
+    public ItemDto update(@PathVariable Long itemId, @RequestHeader("X-Sharer-User-Id") Long userId,
                        @RequestBody ItemDto itemDto)
             throws ServerException, NotFoundException {
         return itemService.updateItem(userId, itemId, itemDto);
     }
 
     @GetMapping("/search")
-    public List<Item> findByText(@RequestParam("text") String text) {
+    public List<ItemDto> findByText(@RequestParam("text") String text) {
         return itemService.findByText(text);
     }
 
