@@ -78,6 +78,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<Booking> getBookerBookingsByState(Long bookerId, String state) /*throws UnknownStateException*/ {
+        LocalDateTime dateTime = LocalDateTime.now();
         userService.getUserById(bookerId);
         switch (state) {
             case "REJECTED":
@@ -93,16 +94,16 @@ public class BookingServiceImpl implements BookingService {
                                 Sort.by(Sort.Direction.DESC, "end"))
                         .stream().collect(Collectors.toList());
             case "PAST":
-                return bookingRepository.findByBooker_IdAndEndIsBefore(bookerId, LocalDateTime.now(),
+                return bookingRepository.findByBooker_IdAndEndIsBefore(bookerId, dateTime,
                                 Sort.by(Sort.Direction.DESC, "end"))
                         .stream().collect(Collectors.toList());
             case "FUTURE":
-                return bookingRepository.findByBooker_IdAndStartIsAfter(bookerId, LocalDateTime.now(),
+                return bookingRepository.findByBooker_IdAndStartIsAfter(bookerId, dateTime,
                                 Sort.by(Sort.Direction.DESC, "end"))
                         .stream().collect(Collectors.toList());
             case "CURRENT":
                 return bookingRepository.findByBooker_IdAndStartIsBeforeAndEndIsAfter(bookerId, LocalDateTime.now(),
-                        LocalDateTime.now(), Sort.by(Sort.Direction.DESC, "end")).stream()
+                                dateTime, Sort.by(Sort.Direction.DESC, "end")).stream()
                         .collect(Collectors.toList());
             default:
                 throw new UnknownStateException("Unknown state: " + state, "Unknown state: " + state);
@@ -111,6 +112,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<Booking> getOwnerBookingsByState(Long ownerId, String state) {
+        LocalDateTime dateTime = LocalDateTime.now();
         userService.getUserById(ownerId);
         switch (state) {
             case "REJECTED":
@@ -126,17 +128,17 @@ public class BookingServiceImpl implements BookingService {
                         .stream().collect(Collectors.toList());
             case "PAST":
                 return bookingRepository.findByOwner_IdOrderByEndDesc(ownerId)
-                        .stream().filter(x -> x.getEnd().isBefore(LocalDateTime.now()))
+                        .stream().filter(x -> x.getEnd().isBefore(dateTime))
                         .collect(Collectors.toList());
             case "FUTURE":
                 return bookingRepository.findByOwner_IdOrderByEndDesc(ownerId)
-                        .stream().filter(x -> x.getStart().isAfter(LocalDateTime.now())
-                                && x.getStatus() == BookingStatus.APPROVED)
+                        .stream().filter(x -> x.getStart().isAfter(dateTime)
+                                && x.getStatus() == BookingStatus.APPROVED || x.getStatus() == BookingStatus.WAITING)
                         .collect(Collectors.toList());
             case "CURRENT":
                 return bookingRepository.findByOwner_IdOrderByEndDesc(ownerId)
-                        .stream().filter(x -> x.getStart().isBefore(LocalDateTime.now())
-                                && x.getEnd().isAfter(LocalDateTime.now()))
+                        .stream().filter(x -> x.getStart().isBefore(dateTime)
+                                && x.getEnd().isAfter(dateTime))
                         .collect(Collectors.toList());
             default:
                 throw new UnknownStateException("Unknown state: " + state, "Unknown state: " + state);
