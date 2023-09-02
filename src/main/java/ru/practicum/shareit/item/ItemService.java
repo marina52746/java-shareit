@@ -20,7 +20,7 @@ public interface ItemService {
 
     ItemDto getItemById(Long id);
 
-    ItemWithBookingsAndComments getItemWithCommentsById(Long userId, Long itemId);
+    ItemWithBookingsAndComments getItemWithCommentsById(Long userId, Long itemId, Item item);
 
     List<ItemWithBookingsAndComments> getUserItems(Long userId);
 

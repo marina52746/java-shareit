@@ -14,6 +14,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.*;
 import ru.practicum.shareit.user.UserService;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.model.UserMapper;
 
 import java.rmi.ServerException;
 import java.time.LocalDateTime;
@@ -26,65 +28,43 @@ public class ItemServiceDb implements ItemService {
     private final UserService userService;
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
-    private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final ItemMapper itemMapper;
+    private final UserMapper userMapper = new UserMapper();
+    private final ItemMapper itemMapper = new ItemMapper();
+    private final BookingMapper bookingMapper = new BookingMapper();
 
     public ItemServiceDb(UserService userService, BookingRepository bookingRepository,
                          ItemRepository itemRepository, CommentRepository commentRepository) {
         this.userService = userService;
         this.bookingRepository = bookingRepository;
         this.itemRepository = itemRepository;
-        this.itemMapper = new ItemMapper(userService, bookingRepository);
-        this.commentMapper = new CommentMapper(userService, bookingRepository);
         this.commentRepository = commentRepository;
     }
 
     public List<ItemWithBookingsAndComments> getUserItems(Long userId) {
         List<Item> items = itemRepository.findByOwnerIdEquals(userId);
         return items.stream()
-                .map(item -> {
-                    return new ItemWithBookingsAndComments(
-                            item.getId(),
-                            item.getName(),
-                            item.getDescription(),
-                            item.getAvailable(),
-                            BookingMapper.fromBookingToOwnerBookingDto(bookingRepository
-                                    .findByItem_Owner_IdAndItem_IdAndStatusAndEndIsBefore(item.getOwner().getId(),
-                                            item.getId(), BookingStatus.APPROVED,
-                                    LocalDateTime.now()).stream().max(BookingMapper.bookingComparator)),
-                            BookingMapper.fromBookingToOwnerBookingDto(bookingRepository
-                                    .findByItem_Owner_IdAndItem_IdAndStatusAndStartIsAfter(item.getOwner().getId(),
-                                            item.getId(), BookingStatus.APPROVED,
-                                    LocalDateTime.now()).stream().min(BookingMapper.bookingComparator)),
-                            (commentRepository.findByItem_IdEquals(item.getId(),
-                                    Sort.by(Sort.Direction.DESC, "created"))).stream()
-                                    .map(CommentMapper::fromCommentToCommentDto).collect(Collectors.toList()));
-                }).collect(Collectors.toList());
+                .map(item -> getItemWithCommentsById(userId, item.getId(), item)).collect(Collectors.toList());
     }
 
     @Override
     public ItemDto createItem(Long userId, ItemDto itemDto) throws NotFoundException {
-        userService.getUserById(userId);
+        User user = userMapper.fromUserDtoToUser(userService.getUserById(userId));
         itemDto.setOwnerId(userId);
-        return itemMapper.fromItemToItemDto(itemRepository.save(itemMapper.fromItemDtoToItem(itemDto)));
+        return itemMapper.fromItemToItemDto(itemRepository.save(itemMapper.fromItemDtoToItem(itemDto, user)));
     }
 
     @Override
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) throws NotFoundException {
-        UserDto user = userService.getUserById(userId);
-        itemRepository.findById(itemId);
+        User user = userMapper.fromUserDtoToUser(userService.getUserById(userId));
+        Item item = itemMapper.fromItemDtoToItem(getItemById(itemId), user);
         List<Booking> bookingList = bookingRepository.findByBooker_IdAndItem_IdAndStatusAndStartIsBefore(
                 userId, itemId, BookingStatus.APPROVED, LocalDateTime.now());
         if (bookingList.isEmpty())
             throw new ValidationException("User can't leave comments");
-        commentDto.setAuthorId(userId);
-        commentDto.setAuthorName(user.getName());
-        commentDto.setItemId(itemId);
-        commentDto.setCreated(LocalDateTime.now());
-        commentDto = commentMapper.fromCommentToCommentDto(
-                commentRepository.save(commentMapper.fromCommentDtoToComment(commentDto, this)));
-        return commentDto;
+        commentDto = CommentMapper.commentDtoSetValues(commentDto, userId, user.getName(), itemId, LocalDateTime.now());
+        Comment comment = commentRepository.save(CommentMapper.fromCommentDtoToComment(commentDto, item, user));
+        return CommentMapper.fromCommentToCommentDto(comment);
     }
 
     private void patchItemDtoValidate(ItemDto itemDto) {
@@ -124,33 +104,28 @@ public class ItemServiceDb implements ItemService {
     }
 
     @Override
-    public ItemWithBookingsAndComments getItemWithCommentsById(Long userId, Long itemId) {
-        Item item;
+    public ItemWithBookingsAndComments getItemWithCommentsById(Long userId, Long itemId, Item item) {
+        if (item == null)
         try {
             item = itemRepository.findById(itemId).orElseThrow(NoSuchElementException::new);
         } catch (Exception NoSuchElementException) {
             throw new NotFoundException("Item with id " + itemId + " doesn't exist");
         }
         List<CommentDto> comments = commentRepository.findByItem_IdEquals(item.getId(),
-                Sort.by(Sort.Direction.DESC, "created")).stream().map(CommentMapper::fromCommentToCommentDto)
+                Sort.by(Sort.Direction.DESC, "created")).stream()
+                .map(CommentMapper::fromCommentToCommentDto)
                 .collect(Collectors.toList());
-        ItemWithBookingsAndComments itemWith = new ItemWithBookingsAndComments(
-                item.getId(),
-                item.getName(),
-                item.getDescription(),
-                item.getAvailable(),
-                null,
-                null,
-                comments);
+        ItemWithBookingsAndComments itemWith = itemMapper.fromItemToItemWithBookingsAndComments(item, null,
+                null, comments);
         if (item.getOwner().getId() == userId) {
-            itemWith.setLastBooking(BookingMapper.fromBookingToOwnerBookingDto(
+            itemWith.setLastBooking(bookingMapper.fromBookingToOwnerBookingDto(
                     bookingRepository.findByItem_Owner_IdAndItem_IdAndStatusAndStartIsBefore(item.getOwner().getId(),
                             item.getId(), BookingStatus.APPROVED, LocalDateTime.now())
-                            .stream().max(BookingMapper.bookingComparator)));
-            itemWith.setNextBooking(BookingMapper.fromBookingToOwnerBookingDto(
+                            .stream().max(Booking.bookingComparator).orElse(null)));
+            itemWith.setNextBooking(bookingMapper.fromBookingToOwnerBookingDto(
                     bookingRepository.findByItem_Owner_IdAndItem_IdAndStatusAndStartIsAfter(item.getOwner().getId(),
                             item.getId(), BookingStatus.APPROVED, LocalDateTime.now())
-                            .stream().min(BookingMapper.bookingComparator)));
+                            .stream().min(Booking.bookingComparator).orElse(null)));
         }
         return itemWith;
     }

@@ -1,79 +1,58 @@
 package ru.practicum.shareit.booking;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.InputBookingDto;
 import ru.practicum.shareit.booking.dto.OwnerBookingDto;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.ItemService;
-import ru.practicum.shareit.item.model.ItemMapper;
-import ru.practicum.shareit.user.UserService;
-import ru.practicum.shareit.user.model.UserMapper;
-
-import java.util.Comparator;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import ru.practicum.shareit.item.dto.ItemShortDto;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.dto.UserShortDto;
+import ru.practicum.shareit.user.model.User;
 
 @Component
 public class BookingMapper {
-    private final ItemService itemService;
-    private final UserService userService;
-    private final ItemMapper itemMapper;
-    private final BookingRepository bookingRepository;
-
-    public static Comparator<Booking> bookingComparator = new Comparator<Booking>() {
-        @Override
-        public int compare(Booking o1, Booking o2) {
-            return o1.getStart().compareTo(o2.getStart());
-        }
-    };
-
-    @Autowired
-    public BookingMapper(ItemService itemService, UserService userService, BookingRepository bookingRepository) {
-        this.itemService = itemService;
-        this.userService = userService;
-        this.bookingRepository = bookingRepository;
-        this.itemMapper = new ItemMapper(userService, bookingRepository);
-    }
 
     public BookingDto fromBookingToBookingDto(Booking booking) {
+        if (booking == null) return null;
         return new BookingDto(
                 booking.getId(),
                 booking.getStart(),
                 booking.getEnd(),
-                booking.getItem().getId(),
-                booking.getBooker().getId(),
+                booking.getItem() != null ?  new ItemShortDto(booking.getItem().getId(), booking.getItem().getName())
+                    : null,
+                booking.getBooker() != null ? new UserShortDto(booking.getBooker().getId()) : null,
                 booking.getStatus()
         );
     }
 
-    public static OwnerBookingDto fromBookingToOwnerBookingDto(Optional<Booking> booking) {
-        Booking optBooking = booking.orElse(null);
-        if (optBooking == null)
-            return null;
-        else {
-            return new OwnerBookingDto(
-                    optBooking.getId(),
-                    optBooking.getBooker().getId());
-        }
+    public OwnerBookingDto fromBookingToOwnerBookingDto(Booking booking) {
+        if (booking == null) return null;
+        return new OwnerBookingDto(
+                booking.getId(),
+                booking.getBooker() != null ? booking.getBooker().getId() : 0);
     }
 
-    public Booking fromBookingDtoToBooking(BookingDto bookingDto) {
+    public Booking fromBookingDtoToBooking(BookingDto bookingDto, Item item, User user) {
+        if (bookingDto == null) return null;
         return new Booking(
                 bookingDto.getId(),
                 bookingDto.getStart(),
                 bookingDto.getEnd(),
-                itemMapper.fromItemDtoToItem(itemService.getItemById(bookingDto.getItemId())),
-                UserMapper.fromUserDtoToUser(userService.getUserById(bookingDto.getBookerId())),
+                item,
+                user,
                 bookingDto.getStatus()
         );
     }
 
-    public Booking fromOwnerBookingDtoToBooking(OwnerBookingDto bookingDto) {
-        try {
-            return bookingRepository.findById(bookingDto.getId()).orElseThrow(NoSuchElementException::new);
-        } catch (Exception NoSuchElementException) {
-            throw new NotFoundException("Booking with id " + bookingDto.getId() + " doesn't exist");
-        }
+    public Booking fromInputBookingDtoToBooking(InputBookingDto inputBookingDto, Item item, User user) {
+        if (inputBookingDto == null) return null;
+        return new Booking(
+                inputBookingDto.getStart(),
+                inputBookingDto.getEnd(),
+                item,
+                user,
+                BookingStatus.WAITING
+        );
     }
 }
+

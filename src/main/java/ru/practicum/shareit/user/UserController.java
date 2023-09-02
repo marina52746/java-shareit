@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
 
-import javax.management.InstanceNotFoundException;
 import javax.validation.Valid;
 import java.rmi.ServerException;
 import java.util.List;
@@ -37,7 +36,7 @@ public class UserController {
 
     @PatchMapping("/{userId}")
     public UserDto update(@RequestBody UserDto userDto,
-                       @PathVariable Long userId) throws InstanceNotFoundException, ServerException {
+                       @PathVariable Long userId) throws ServerException {
         return userService.updateUser(userId, userDto);
     }
 

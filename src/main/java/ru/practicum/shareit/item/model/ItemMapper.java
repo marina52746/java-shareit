@@ -1,39 +1,49 @@
 package ru.practicum.shareit.item.model;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.dto.OwnerBookingDto;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.user.UserService;
-import ru.practicum.shareit.user.model.UserMapper;
+import ru.practicum.shareit.user.model.User;
+
+import java.util.List;
 
 @Component
 public class ItemMapper {
-    private final UserService userService;
-    private final BookingRepository bookingRepository;
 
-    @Autowired
-    public ItemMapper(UserService userService, BookingRepository bookingRepository) {
-        this.userService = userService;
-        this.bookingRepository = bookingRepository;
-    }
     public ItemDto fromItemToItemDto(Item item) {
+        if (item == null) return null;
         return new ItemDto(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
                 item.getAvailable(),
-                item.getOwner().getId()
+                item.getOwner() != null ? item.getOwner().getId() : 0
         );
     }
 
-    public Item fromItemDtoToItem(ItemDto itemDto) {
+    public Item fromItemDtoToItem(ItemDto itemDto, User user) {
+        if (itemDto == null) return null;
         return new Item(
                 itemDto.getId(),
                 itemDto.getName(),
                 itemDto.getDescription(),
                 itemDto.getAvailable(),
-                UserMapper.fromUserDtoToUser(userService.getUserById(itemDto.getOwnerId()))
+                user
+        );
+    }
+
+    public ItemWithBookingsAndComments fromItemToItemWithBookingsAndComments(
+            Item item, OwnerBookingDto lastBooking, OwnerBookingDto nextBooking, List<CommentDto> comments) {
+        if (item == null) return null;
+        return new ItemWithBookingsAndComments(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getAvailable(),
+                lastBooking,
+                nextBooking,
+                comments
         );
     }
 }

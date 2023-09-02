@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.ShareItApp;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -26,25 +27,29 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public ItemWithBookingsAndComments getItemWithCommentsById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                                @PathVariable Long itemId) {
-        return itemService.getItemWithCommentsById(userId, itemId);
+        ShareItApp.sharerUserId = userId;
+        return itemService.getItemWithCommentsById(ShareItApp.sharerUserId, itemId, null);
     }
 
     @GetMapping
     public List<ItemWithBookingsAndComments> getUserItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        return itemService.getUserItems(userId);
+        ShareItApp.sharerUserId = userId;
+        return itemService.getUserItems(ShareItApp.sharerUserId);
     }
 
     @PostMapping
     public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
                        @Valid @RequestBody ItemDto itemDto) throws NotFoundException {
-        return itemService.createItem(userId, itemDto);
+        ShareItApp.sharerUserId = userId;
+        return itemService.createItem(ShareItApp.sharerUserId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto update(@PathVariable Long itemId, @RequestHeader("X-Sharer-User-Id") Long userId,
                        @RequestBody ItemDto itemDto)
             throws ServerException, NotFoundException {
-        return itemService.updateItem(userId, itemId, itemDto);
+        ShareItApp.sharerUserId = userId;
+        return itemService.updateItem(ShareItApp.sharerUserId, itemId, itemDto);
     }
 
     @GetMapping("/search")
@@ -55,7 +60,8 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public CommentDto createComment(@PathVariable Long itemId, @RequestHeader("X-Sharer-User-Id") Long userId,
                              @Valid @RequestBody CommentDto comment) throws NotFoundException {
-        return itemService.createComment(userId, itemId, comment);
+        ShareItApp.sharerUserId = userId;
+        return itemService.createComment(ShareItApp.sharerUserId, itemId, comment);
     }
 
     @GetMapping("/all")

@@ -8,6 +8,7 @@ import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 
 @Entity
 @Table(name = "bookings")
@@ -37,4 +38,19 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
+
+    public static Comparator<Booking> bookingComparator = new Comparator<Booking>() {
+        @Override
+        public int compare(Booking o1, Booking o2) {
+            return o1.getStart().compareTo(o2.getStart());
+        }
+    };
+
+    public Booking(LocalDateTime start, LocalDateTime end, Item item, User booker, BookingStatus status) {
+        this.start = start;
+        this.end = end;
+        this.item = item;
+        this.booker = booker;
+        this.status = status;
+    }
 }
