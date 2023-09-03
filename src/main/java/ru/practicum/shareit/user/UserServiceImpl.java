@@ -1,13 +1,14 @@
 package ru.practicum.shareit.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserMapper;
 
-import java.rmi.ServerException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,23 +17,13 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Autowired
-    public UserServiceImpl(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
-
-    @Override
-    public UserDto createUser(UserDto userDto) throws ServerException {
-        return UserMapper.fromUserToUserDto(userStorage.createUser(UserMapper.fromUserDtoToUser(userDto)));
-    }
-
-    @Override
-    public UserDto updateUser(Long userId, UserDto userDto) throws NotFoundException, ServerException,
-            ValidationException {
-        patchUserDtoValidate(userDto);
-        return UserMapper.fromUserToUserDto(userStorage.updateUser(userId, UserMapper.fromUserDtoToUser(userDto)));
+    public UserServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+        this.userMapper = new UserMapper();
     }
 
     private void patchUserDtoValidate(UserDto userDto) throws ValidationException{
@@ -47,18 +38,45 @@ public class UserServiceImpl implements UserService {
             Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
 
     @Override
+    public UserDto createUser(UserDto userDto) {
+        User user = userMapper.fromUserDtoToUser(userDto);
+        user = userRepository.save(user);
+        return userMapper.fromUserToUserDto(user);
+    }
+
+    @Override
+    @Modifying
+    public UserDto updateUser(Long userId, UserDto user) throws NotFoundException, ValidationException {
+        if (!(userRepository.existsById(userId)))
+            throw new NotFoundException("User with id = " + userId + "doesn't exist");
+        patchUserDtoValidate(user);
+        UserDto changingUser = getUserById(userId);
+        if (!(user.getEmail() == null || user.getEmail().isEmpty())
+                && !(user.getEmail().equals(changingUser.getEmail()))) {
+            changingUser.setEmail(user.getEmail());
+        }
+        if (!(user.getName() == null || user.getName().isEmpty()))
+            changingUser.setName(user.getName());
+        userRepository.save(userMapper.fromUserDtoToUser(changingUser));
+        return changingUser;
+    }
+
     public UserDto getUserById(Long id) throws NotFoundException {
-        return UserMapper.fromUserToUserDto(userStorage.getUserById(id));
+        try {
+            return userMapper.fromUserToUserDto(userRepository.findById(id).orElseThrow());
+        } catch (Exception NoSuchElementException) {
+            throw new NotFoundException("User with id = " + id + " doesn't exist");
+        }
+
     }
 
-    @Override
     public void deleteUser(Long id) {
-        userStorage.deleteUser(id);
+        userRepository.deleteById(id);
     }
 
-    @Override
     public List<UserDto> getAllUsers() {
-        return userStorage.getAllUsers().stream().map(x -> UserMapper.fromUserToUserDto(x))
+        return userRepository.findAll().stream().map(x -> userMapper.fromUserToUserDto(x))
                 .collect(Collectors.toList());
     }
+
 }
