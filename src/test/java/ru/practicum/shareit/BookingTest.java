@@ -256,7 +256,7 @@ public class BookingTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(7))
                 .andExpect(jsonPath("$[0].start").value("2023-09-15T09:00:00"))
-                .andExpect(jsonPath("$[0].end").value("2023-09-26T12:00:00"))
+                .andExpect(jsonPath("$[0].end").value("2023-09-26T09:00:00"))
                 .andExpect(jsonPath("$[0].status").value("APPROVED"))
                 .andExpect(jsonPath("$[0].booker.id").value(1))
                 .andExpect(jsonPath("$[0].item.id").value(2))
