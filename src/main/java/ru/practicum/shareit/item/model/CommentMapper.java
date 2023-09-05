@@ -33,11 +33,11 @@ public class CommentMapper {
     }
 
     public static CommentDto commentDtoSetValues(CommentDto commentDto,
-                                                 Long authorId, String authorName, Long itemId, LocalDateTime created) {
+                                                 Long authorId, String authorName, Long itemId) {
         commentDto.setAuthorId(authorId);
         commentDto.setAuthorName(authorName);
         commentDto.setItemId(itemId);
-        commentDto.setCreated(created);
+        commentDto.setCreated(LocalDateTime.now());
         return commentDto;
     }
 }

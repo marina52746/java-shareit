@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -22,13 +23,9 @@ public interface ItemService {
 
     ItemWithBookingsAndComments getItemWithCommentsById(Long userId, Long itemId, Item item);
 
-    List<ItemWithBookingsAndComments> getUserItems(Long userId);
+    List<ItemWithBookingsAndComments> getUserItems(Long userId, Pageable pageable);
 
-    void deleteItem(Long id);
-
-    List<ItemDto> getAllItems();
-
-    List<ItemDto> findByText(String text);
+    List<ItemDto> findByText(String text, Pageable pageable);
 
     List<Item> getAll();
 
