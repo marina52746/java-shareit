@@ -19,7 +19,7 @@ public class ItemRequestDto {
     @NotNull
     private String description;
 
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'+03:00'")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'+00:00'")
     private LocalDateTime created;
 
     private List<ItemDto> items;

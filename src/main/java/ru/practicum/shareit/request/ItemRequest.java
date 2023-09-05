@@ -32,7 +32,7 @@ public class ItemRequest {
     @JoinColumn(name = "requestor_id")
     private User requestor;
 
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'+03:00'")
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'+00:00'")
     @Column(name = "created")
     private LocalDateTime created;
 }
