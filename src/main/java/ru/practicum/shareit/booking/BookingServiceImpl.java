@@ -8,9 +8,8 @@ import ru.practicum.shareit.booking.dto.InputBookingDto;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.UnknownStateException;
 import ru.practicum.shareit.exception.ValidationException;
-import ru.practicum.shareit.item.ItemService;
+import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.ItemMapper;
 import ru.practicum.shareit.user.UserService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserMapper;
@@ -22,14 +21,15 @@ import java.util.stream.Collectors;
 @Service
 public class BookingServiceImpl implements BookingService {
     private final UserService userService;
-    private final ItemService itemService;
+    private final ItemRepository itemRepository;
     private final BookingRepository bookingRepository;
 
     @Autowired
-    public BookingServiceImpl(UserService userService, ItemService itemService, BookingRepository bookingRepository) {
-        this.itemService = itemService;
+    public BookingServiceImpl(UserService userService, ItemRepository itemRepository,
+                              BookingRepository bookingRepository) {
         this.userService = userService;
         this.bookingRepository = bookingRepository;
+        this.itemRepository = itemRepository;
     }
 
     public BookingDto getBookingOrThrow(long userId, long bookingId) {
@@ -47,10 +47,11 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto create(InputBookingDto inputBookingDto) {
         LocalDateTime dateTime = LocalDateTime.now();
         User user = UserMapper.fromUserDtoToUser(userService.getUserById(inputBookingDto.getBookerId()));
-        Item item = ItemMapper.fromItemDtoToItem(itemService.getItemById(inputBookingDto.getItemId()), user, null); //TODO //+request
+        Item item = itemRepository.findById(inputBookingDto.getItemId()).orElseThrow(
+                () -> new NotFoundException("Item id = " + inputBookingDto.getItemId() + " doesn't exist"));
         if (!(item.getAvailable()))
             throw new ValidationException("Item " + item.getId() + " is not available");
-        if (inputBookingDto.getBookerId() == itemService.getItemById(inputBookingDto.getItemId()).getOwnerId())
+        if (inputBookingDto.getBookerId() == item.getOwner().getId())
             throw new NotFoundException("User can't book his own thing");
         if (inputBookingDto.getStart().isBefore(dateTime) || inputBookingDto.getEnd().isBefore(dateTime))
             throw new ValidationException("Start and End date must not be before now");
@@ -68,7 +69,8 @@ public class BookingServiceImpl implements BookingService {
         if (bookingDto.getStatus() == BookingStatus.APPROVED)
             throw new ValidationException("Booking is already approved");
         User user = UserMapper.fromUserDtoToUser(userService.getUserById(bookingDto.getBooker().getId()));
-        Item item = ItemMapper.fromItemDtoToItem(itemService.getItemById(bookingDto.getItem().getId()), user, null); //TODO +request
+        Item item = itemRepository.findById(bookingDto.getItem().getId()).orElseThrow(
+                () -> new NotFoundException("Item id = " + bookingDto.getItem().getId() + " doesn't exist"));
         if (approved)
             bookingDto.setStatus(BookingStatus.APPROVED);
         else
