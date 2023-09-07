@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.ShareItApp;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -9,10 +11,15 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemWithBookingsAndComments;
+import ru.practicum.shareit.pagination.FromSizeRequest;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.rmi.ServerException;
 import java.util.List;
+
+import static org.springframework.data.domain.Sort.Direction.ASC;
 
 @RestController
 @RequestMapping("/items")
@@ -32,9 +39,13 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemWithBookingsAndComments> getUserItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemWithBookingsAndComments> getUserItems(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @PositiveOrZero @RequestParam(required = false, defaultValue = "0") Integer from,
+            @Positive @RequestParam(required = false, defaultValue = "10") Integer size) {
         ShareItApp.sharerUserId = userId;
-        return itemService.getUserItems(ShareItApp.sharerUserId);
+        final PageRequest pageRequest = FromSizeRequest.of(from, size, Sort.by(ASC, "id"));
+        return itemService.getUserItems(ShareItApp.sharerUserId, pageRequest);
     }
 
     @PostMapping
@@ -52,9 +63,12 @@ public class ItemController {
         return itemService.updateItem(ShareItApp.sharerUserId, itemId, itemDto);
     }
 
-    @GetMapping("/search")
-    public List<ItemDto> findByText(@RequestParam("text") String text) {
-        return itemService.findByText(text);
+    @GetMapping("/search") //items/search?text={text}
+    public List<ItemDto> findByText(@RequestParam("text") String text,
+                                    @PositiveOrZero @RequestParam(required = false, defaultValue = "0") Integer from,
+                                    @Positive @RequestParam(required = false, defaultValue = "10") Integer size) {
+        final PageRequest pageRequest = FromSizeRequest.of(from, size, Sort.by(ASC, "id"));
+        return itemService.findByText(text, pageRequest);
     }
 
     @PostMapping("/{itemId}/comment")

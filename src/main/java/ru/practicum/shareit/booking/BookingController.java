@@ -1,12 +1,19 @@
 package ru.practicum.shareit.booking;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.ShareItApp;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.InputBookingDto;
+import ru.practicum.shareit.pagination.FromSizeRequest;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
+
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @RestController
 @RequestMapping(path = "/bookings")
@@ -34,19 +41,27 @@ public class BookingController {
 
     //bookings?state={state}
     @GetMapping
-    public List<BookingDto> bookerBookings (@RequestHeader("X-Sharer-User-Id") Long bookerId,
-                                     @RequestParam(required = false, defaultValue = "ALL") String state) {
+    public List<BookingDto> bookerBookings (
+            @RequestHeader("X-Sharer-User-Id") Long bookerId,
+            @RequestParam(required = false, defaultValue = "ALL") String state,
+            @PositiveOrZero @RequestParam(required = false, defaultValue = "0") Integer from,
+            @Positive @RequestParam(required = false, defaultValue = "10") Integer size) {
         ShareItApp.sharerUserId = bookerId;
-        return bookingService.getBookerBookingsByState(ShareItApp.sharerUserId, state);
+        final PageRequest pageRequest = FromSizeRequest.of(from, size, Sort.by(DESC, "end"));
+        return bookingService.getBookerBookingsByState(ShareItApp.sharerUserId, state, pageRequest);
 
     }
 
     // /bookings/owner?state={state}
     @GetMapping("/owner")
-    public List<BookingDto> ownerBookings(@RequestHeader("X-Sharer-User-Id") Long ownerId,
-                                          @RequestParam(required = false, defaultValue = "ALL") String state) {
+    public List<BookingDto> ownerBookings(
+            @RequestHeader("X-Sharer-User-Id") Long ownerId,
+            @RequestParam(required = false, defaultValue = "ALL") String state,
+            @PositiveOrZero @RequestParam(required = false, defaultValue = "0") Integer from,
+            @Positive @RequestParam(required = false, defaultValue = "10") Integer size) {
         ShareItApp.sharerUserId = ownerId;
-        return bookingService.getOwnerBookingsByState(ShareItApp.sharerUserId, state);
+        final PageRequest pageRequest = FromSizeRequest.of(from, size, Sort.by(DESC, "end"));
+        return bookingService.getOwnerBookingsByState(ShareItApp.sharerUserId, state, pageRequest);
     }
 
     @GetMapping("/all")

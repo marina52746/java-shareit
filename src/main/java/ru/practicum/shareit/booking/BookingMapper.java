@@ -12,7 +12,7 @@ import ru.practicum.shareit.user.model.User;
 @Component
 public class BookingMapper {
 
-    public BookingDto fromBookingToBookingDto(Booking booking) {
+    public static BookingDto fromBookingToBookingDto(Booking booking) {
         if (booking == null) return null;
         return new BookingDto(
                 booking.getId(),
@@ -25,14 +25,14 @@ public class BookingMapper {
         );
     }
 
-    public OwnerBookingDto fromBookingToOwnerBookingDto(Booking booking) {
+    public static OwnerBookingDto fromBookingToOwnerBookingDto(Booking booking) {
         if (booking == null) return null;
         return new OwnerBookingDto(
                 booking.getId(),
                 booking.getBooker() != null ? booking.getBooker().getId() : 0);
     }
 
-    public Booking fromBookingDtoToBooking(BookingDto bookingDto, Item item, User user) {
+    public static Booking fromBookingDtoToBooking(BookingDto bookingDto, Item item, User user) {
         if (bookingDto == null) return null;
         return new Booking(
                 bookingDto.getId(),
@@ -44,7 +44,7 @@ public class BookingMapper {
         );
     }
 
-    public Booking fromInputBookingDtoToBooking(InputBookingDto inputBookingDto, Item item, User user) {
+    public static Booking fromInputBookingDtoToBooking(InputBookingDto inputBookingDto, Item item, User user) {
         if (inputBookingDto == null) return null;
         return new Booking(
                 inputBookingDto.getStart(),

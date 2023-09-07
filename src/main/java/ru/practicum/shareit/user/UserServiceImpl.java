@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserMapper;
 
 import java.util.*;
@@ -18,12 +17,10 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.userMapper = new UserMapper();
     }
 
     private void patchUserDtoValidate(UserDto userDto) throws ValidationException{
@@ -39,9 +36,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-        User user = userMapper.fromUserDtoToUser(userDto);
-        user = userRepository.save(user);
-        return userMapper.fromUserToUserDto(user);
+        return UserMapper.fromUserToUserDto(userRepository.save(UserMapper.fromUserDtoToUser(userDto)));
     }
 
     @Override
@@ -57,13 +52,13 @@ public class UserServiceImpl implements UserService {
         }
         if (!(user.getName() == null || user.getName().isEmpty()))
             changingUser.setName(user.getName());
-        userRepository.save(userMapper.fromUserDtoToUser(changingUser));
+        userRepository.save(UserMapper.fromUserDtoToUser(changingUser));
         return changingUser;
     }
 
     public UserDto getUserById(Long id) throws NotFoundException {
         try {
-            return userMapper.fromUserToUserDto(userRepository.findById(id).orElseThrow());
+            return UserMapper.fromUserToUserDto(userRepository.findById(id).orElseThrow());
         } catch (Exception NoSuchElementException) {
             throw new NotFoundException("User with id = " + id + " doesn't exist");
         }
@@ -71,11 +66,12 @@ public class UserServiceImpl implements UserService {
     }
 
     public void deleteUser(Long id) {
+        getUserById(id);
         userRepository.deleteById(id);
     }
 
     public List<UserDto> getAllUsers() {
-        return userRepository.findAll().stream().map(x -> userMapper.fromUserToUserDto(x))
+        return userRepository.findAll().stream().map(x -> UserMapper.fromUserToUserDto(x))
                 .collect(Collectors.toList());
     }
 
