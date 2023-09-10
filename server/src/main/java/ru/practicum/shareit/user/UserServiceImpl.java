@@ -61,7 +61,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserById(Long id) throws NotFoundException {
         try {
             return UserMapper.fromUserToUserDto(userRepository.findById(id).orElseThrow());
-        } catch (Exception NoSuchElementException) {
+        } catch (Exception exception) {
             throw new NotFoundException("User with id = " + id + " doesn't exist");
         }
     }

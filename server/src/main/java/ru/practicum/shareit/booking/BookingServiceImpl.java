@@ -55,7 +55,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("User can't book his own thing");
         if (inputBookingDto.getStart().isBefore(dateTime) || inputBookingDto.getEnd().isBefore(dateTime))
             throw new ValidationException("Start and End date must not be before now");
-        if(inputBookingDto.getStart().isAfter(inputBookingDto.getEnd()) || inputBookingDto.getStart().equals(inputBookingDto.getEnd()))
+        if (inputBookingDto.getStart().isAfter(inputBookingDto.getEnd()) || inputBookingDto.getStart().equals(inputBookingDto.getEnd()))
             throw new ValidationException("Start date must be before end date");
         return BookingMapper.fromBookingToBookingDto(bookingRepository
                 .save(BookingMapper.fromInputBookingDtoToBooking(inputBookingDto, item, user)));

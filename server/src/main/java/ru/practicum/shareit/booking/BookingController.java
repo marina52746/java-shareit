@@ -38,7 +38,7 @@ public class BookingController {
 
     //bookings?state={state}
     @GetMapping
-    public List<BookingDto> bookerBookings (
+    public List<BookingDto> bookerBookings(
             @RequestHeader("X-Sharer-User-Id") Long bookerId,
             @RequestParam(required = false, defaultValue = "ALL") String state,
             @RequestParam(required = false, defaultValue = "0") Integer from,

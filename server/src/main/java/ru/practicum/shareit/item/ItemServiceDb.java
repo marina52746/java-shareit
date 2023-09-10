@@ -100,7 +100,7 @@ public class ItemServiceDb implements ItemService {
             if (itemDto.getDescription() != null) newItem.setDescription(itemDto.getDescription());
             if (itemDto.getAvailable() != null) newItem.setAvailable(itemDto.getAvailable());
             return ItemMapper.fromItemToItemDto(itemRepository.save(newItem));
-        } catch (Exception NoSuchElementException) {
+        } catch (Exception exception) {
             throw new NotFoundException("Item with id = " + itemId + "doesn't exist");
         }
     }
@@ -109,7 +109,7 @@ public class ItemServiceDb implements ItemService {
     public ItemDto getItemById(Long id) {
         try {
             return ItemMapper.fromItemToItemDto(itemRepository.findById(id).orElseThrow(NoSuchElementException::new));
-        } catch (Exception NoSuchElementException) {
+        } catch (Exception exception) {
             throw new NotFoundException("Item with id = " + id + "doesn't exist");
         }
     }
@@ -119,7 +119,7 @@ public class ItemServiceDb implements ItemService {
         if (item == null)
         try {
             item = itemRepository.findById(itemId).orElseThrow(NoSuchElementException::new);
-        } catch (Exception NoSuchElementException) {
+        } catch (Exception exception) {
             throw new NotFoundException("Item with id " + itemId + " doesn't exist");
         }
         List<CommentDto> comments = commentRepository.findByItem_IdEquals(item.getId(),

@@ -32,7 +32,7 @@ public class Comment {
     @JoinColumn(name = "users_id", nullable = false)
     private User author;
 
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'+00:00'")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'+00:00'")
     @Column(name = "created")
     private LocalDateTime created;
 }

@@ -19,6 +19,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             " and i.available = true")
     Page<Item> search(String text, Pageable pageable);
 
-    List<Item> findByRequest_IdOrderByRequest_CreatedDesc(Long RequestId);
+    List<Item> findByRequest_IdOrderByRequest_CreatedDesc(Long requestId);
 
 }
