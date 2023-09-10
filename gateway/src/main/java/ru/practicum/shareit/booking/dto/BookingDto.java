@@ -20,11 +20,9 @@ public class BookingDto {
     private Long id;
 
     @NotNull
-    @FutureOrPresent
     private LocalDateTime start;
 
     @NotNull
-    @Future
     private LocalDateTime end;
 
     private ItemShortDto item;
