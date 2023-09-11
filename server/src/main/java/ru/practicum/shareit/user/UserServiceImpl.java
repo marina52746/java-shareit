@@ -11,8 +11,6 @@ import ru.practicum.shareit.user.model.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
