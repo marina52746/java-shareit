@@ -6,17 +6,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.exception.NotFoundException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
-import java.rmi.ServerException;
 
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-//@Validated
 @RequestMapping("/items")
 public class ItemController {
     private final ItemClient itemClient;
@@ -37,14 +34,13 @@ public class ItemController {
 
     @PostMapping
     public ResponseEntity<Object> create(@RequestHeader("X-Sharer-User-Id") Long userId,
-                       @Valid @RequestBody ItemDto itemDto) throws NotFoundException {
+                       @Valid @RequestBody ItemDto itemDto) {
         return itemClient.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
     public ResponseEntity<Object> update(@PathVariable Long itemId, @RequestHeader("X-Sharer-User-Id") Long userId,
-                       @RequestBody ItemDto itemDto)
-            throws ServerException, NotFoundException {
+                       @RequestBody ItemDto itemDto) {
         return itemClient.updateItem(userId, itemId, itemDto);
     }
 
@@ -59,7 +55,7 @@ public class ItemController {
 
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<Object> createComment(@PathVariable Long itemId, @RequestHeader("X-Sharer-User-Id") Long userId,
-                             @Valid @RequestBody CommentDto comment) throws NotFoundException {
+                             @Valid @RequestBody CommentDto comment) {
         return itemClient.createComment(userId, itemId, comment);
     }
 

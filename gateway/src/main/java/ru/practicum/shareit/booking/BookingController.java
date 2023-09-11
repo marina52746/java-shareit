@@ -9,10 +9,12 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.InputBookingDto;
 import ru.practicum.shareit.booking.dto.State;
+import ru.practicum.shareit.exception.ValidationException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping(path = "/bookings")
@@ -48,6 +50,11 @@ public class BookingController {
 	@PostMapping
 	public ResponseEntity<Object> create(@RequestHeader("X-Sharer-User-Id") long userId,
 										 @RequestBody @Valid InputBookingDto inputBookingDto) {
+		LocalDateTime dateTime = LocalDateTime.now();
+		if (inputBookingDto.getStart().isBefore(dateTime) || inputBookingDto.getEnd().isBefore(dateTime))
+			throw new ValidationException("Start and End date must not be before now");
+		if (inputBookingDto.getStart().isAfter(inputBookingDto.getEnd()) || inputBookingDto.getStart().equals(inputBookingDto.getEnd()))
+			throw new ValidationException("Start date must be before end date");
 		log.info("Creating booking {}, userId={}", inputBookingDto, userId);
 		return bookingClient.createBooking(userId, inputBookingDto);
 	}

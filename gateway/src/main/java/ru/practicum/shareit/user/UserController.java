@@ -5,16 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import javax.validation.Valid;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping(path = "/users")
 @RequiredArgsConstructor
 @Slf4j
-//@Validated
 public class UserController {
     private final UserClient userClient;
 
@@ -24,7 +25,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> findUserById(@PathVariable("id") Long userId) throws NotFoundException {
+    public ResponseEntity<Object> findUserById(@PathVariable("id") Long userId) {
         return userClient.getUserById(userId);
     }
 
@@ -36,6 +37,7 @@ public class UserController {
     @PatchMapping("/{userId}")
     public ResponseEntity<Object> update(@RequestBody UserDto userDto,
                        @PathVariable Long userId) {
+        patchUserDtoValidate(userDto);
         return userClient.updateUser(userId, userDto);
     }
 
@@ -44,4 +46,17 @@ public class UserController {
         userClient.deleteUser(userId);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+
+    private void patchUserDtoValidate(UserDto userDto) throws ValidationException {
+        if (userDto.getEmail() != null) {
+            Matcher matcher = validateEmail.matcher(userDto.getEmail());
+            if (!matcher.matches())
+                throw new ValidationException("Email " + userDto.getEmail() + " is not Valid");
+        }
+    }
+
+    private static final Pattern validateEmail =
+            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
+
 }

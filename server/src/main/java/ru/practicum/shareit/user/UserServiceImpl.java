@@ -25,17 +25,6 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
     }
 
-    private void patchUserDtoValidate(UserDto userDto) throws ValidationException {
-        if (userDto.getEmail() != null) {
-            Matcher matcher = validateEmail.matcher(userDto.getEmail());
-            if (!matcher.matches())
-                throw new ValidationException("Email " + userDto.getEmail() + " is not Valid");
-        }
-    }
-
-    private static final Pattern validateEmail =
-            Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
-
     @Override
     public UserDto createUser(UserDto userDto) {
         return UserMapper.fromUserToUserDto(userRepository.save(UserMapper.fromUserDtoToUser(userDto)));
@@ -46,7 +35,6 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(Long userId, UserDto user) throws NotFoundException, ValidationException {
         if (!(userRepository.existsById(userId)))
             throw new NotFoundException("User with id = " + userId + "doesn't exist");
-        patchUserDtoValidate(user);
         UserDto changingUser = getUserById(userId);
         if (!(user.getEmail() == null || user.getEmail().isEmpty())
                 && !(user.getEmail().equals(changingUser.getEmail()))) {

@@ -19,24 +19,6 @@ public enum State {
             }
         }
         throw new UnknownStateException("Unknown state: " + stateStr, "Unknown state: " + stateStr);
-/*
-        switch (stateStr) {
-            case "ALL":
-                return State.ALL;
-            case "CURRENT":
-                return State.CURRENT;
-            case "PAST":
-                return State.PAST;
-            case "FUTURE":
-                return State.FUTURE;
-            case "WAITING":
-                return State.WAITING;
-            case "REJECTED":
-                return State.REJECTED;
-            default:
-                throw new UnknownStateException("Unknown state: " + stateStr, "Unknown state: " + stateStr);
-        }
- */
     }
 }
 
